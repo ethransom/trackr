@@ -1,0 +1,133 @@
+body {
+}
+
+.app {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 400px;
+}
+
+.block {
+  height: 50px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+}
+
+.block .hour {
+  display: block;
+  height: 50px;
+  line-height: 50px;
+  width: 120px;
+  border-bottom: 1px solid grey;
+  box-sizing: border-box;
+  padding-right: 5px;
+  text-align: right;
+  font-size: 10pt;
+  margin-right: 5px;
+}
+
+.block .activity {
+  max-width: calc(400px - 125px);
+  box-sizing: border-box;
+}
+
+.block:first-of-type .activity {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.block:last-of-type .activity {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.activity {
+  width: 100%;
+  max-width: 400px;
+  padding: 5px;
+  height: 50px;
+  margin-bottom: 5px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+  font-family: sans-serif;
+  font-size: 16px;
+}
+
+.activity.Blank {
+  background-color: Gainsboro;
+}
+
+.activity.Sleep {
+  background-color: MidnightBlue;
+}
+
+.activity.School {
+  background-color: Maroon;
+}
+
+.activity.DatingOrPartner {
+  background-color: Tomato;
+}
+
+.activity.Work {
+  background-color: Yellow;
+}
+
+.activity.Internet {
+  background-color: CornflowerBlue;
+}
+
+.activity.Social {
+  background-color: Moccasin;
+}
+
+.activity.Gaming {
+  background-color: SaddleBrown;
+}
+
+.activity.Family {
+  background-color: MediumOrchid;
+}
+
+.activity.Travel {
+  background-color: MediumSeaGreen;
+}
+
+.activity.Errands {
+  background-color: DarkSlateGrey;
+}
+
+.activity.Exercise {
+  background-color: Purple;
+}
+
+.modalContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: white;
+}
+
+.activityChooser {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 810px;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.activityChooser .activity {
+  width: 300px;
+  flex-grow: 1;
+  height: initial;
+  border-radius: 4px;
+  max-width: 75%;
+}
