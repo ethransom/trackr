@@ -21,6 +21,8 @@ enum ActivityType {
   DatingOrPartner,
   Work,
   Internet,
+  Projects,
+  Meals,
   Social,
   Gaming,
   Family,
@@ -48,18 +50,41 @@ class Day extends React.Component {
 
   private activityChooser: ActivityChooser | null;
 
-  private onClick(type: ActivityType, i: number) {
-    console.log("click");
+  private onClick(i: number) {
     if (!this.activityChooser) {
       console.warn("tried to change Block before ActivityChooser was ready");
       return;
     }
 
     this.activityChooser.show().then((type) => {
-      let clone = this.state.hours.slice(0); 
-      clone[i].type = type;
-      this.setState({hours: clone});
+      this.setActivity(i, type);
     });
+  }
+
+  private dragType: ActivityType | null = null;
+
+  private startDrag = (i: number) => {
+    const type = this.state.hours[i].type;
+
+    this.dragType = type;
+
+    document.addEventListener("mouseup", () => {
+      this.dragType = null;
+    })
+  }
+
+  private dragOver = (i: number) => {
+    if (this.dragType === null) {
+      return;
+    }
+
+    this.setActivity(i, this.dragType);
+  }
+
+  private setActivity(i: number, type: ActivityType) {
+    let clone = this.state.hours.slice(0); 
+    clone[i].type = type;
+    this.setState({hours: clone});
   }
 
   componentWillMount() {
@@ -92,7 +117,9 @@ class Day extends React.Component {
           return <Block 
             block={block}
             hour={i}
-            onClick={(type) => this.onClick(type, i)}/> 
+            onClick={() => this.onClick(i)}
+            onMouseDown={() => this.startDrag(i)}
+            onMouseEnter={() => this.dragOver(i)}/> 
         })}
 
         <ActivityChooser ref={(ac) => this.activityChooser = ac}/>
@@ -105,7 +132,9 @@ class Block extends React.Component {
   props: {
     block: BlockModel,
     hour: number,
-    onClick: (type: ActivityType) => void,
+    onClick: () => void,
+    onMouseDown: () => void,
+    onMouseEnter: () => void,
   }
 
   private renderHour(hour: number) {
@@ -125,7 +154,11 @@ class Block extends React.Component {
         <span className="hour">
           {this.renderHour(this.props.hour)} - {this.renderHour(this.props.hour + 1)}
         </span>
-        <Activity onClick={this.props.onClick} type={this.props.block.type}/>
+        <Activity 
+          onClick={this.props.onClick} 
+          onMouseDown={this.props.onMouseDown}
+          onMouseEnter={this.props.onMouseEnter}
+          type={this.props.block.type}/>
       </div>
     )
   }
@@ -134,17 +167,23 @@ class Block extends React.Component {
 class Activity extends React.Component {
   props: {
     type: ActivityType,
-    onClick: (type: ActivityType) => any,
+    onClick: (type: ActivityType) => void,
+    onMouseDown?: () => void,
+    onMouseEnter?: () => void,
   }
 
   render() {
     let activity = ActivityType[this.props.type];
 
-    let className = "activity " + activity;
+    let className = "activity noselect " + activity;
 
     return (
       // TODO: key
-      <div onClick={() => this.props.onClick(this.props.type)} className={className}>
+      <div 
+        className={className}
+        onClick={() => this.props.onClick(this.props.type)}
+        onMouseDown={() => this.props.onMouseDown && this.props.onMouseDown()}
+        onMouseEnter={() => this.props.onMouseEnter && this.props.onMouseEnter()}>
         {activity}
       </div>
     )

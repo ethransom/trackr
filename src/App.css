@@ -81,6 +81,14 @@ body {
   background-color: CornflowerBlue;
 }
 
+.activity.Projects {
+  background-color: darkorange;
+}
+
+.activity.Meals {
+  background-color: forestgreen;
+}
+
 .activity.Social {
   background-color: Moccasin;
 }
