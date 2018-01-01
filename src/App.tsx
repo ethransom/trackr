@@ -1,18 +1,102 @@
 import * as React from 'react';
+import * as firebase from 'firebase';
+import * as moment from 'moment';
+
+// const firebase = require('firebase');
+// import * as firebaseui from 'firebaseui';
+
 import './App.css';
 
+var config = {
+  apiKey: "AIzaSyDajRL9nYDdGEQDFXIw__6nYa9U-ktksY4",
+  authDomain: "trackr-392e8.firebaseapp.com",
+  databaseURL: "https://trackr-392e8.firebaseio.com",
+  projectId: "trackr-392e8",
+  storageBucket: "",
+  messagingSenderId: "770319283484"
+};
+firebase.initializeApp(config);
+
+let database = firebase.database;
+if (!database) {
+  alert("unable to initialize database");
+  throw new Error("unable to initialize database");
+}
+
+let db = database();
+
 class App extends React.Component {
+  state = {
+    date: moment(),
+  };
+
   render() {
     return (
       <div className="app">
         <header>
           <h1>Trackr</h1>
         </header>
-        <Day/>
+        <DatePicker 
+          date={this.state.date} 
+          onChange={(m) => this.setState({date: m})}/>
+
+        <Day date={this.state.date.format("YYYY-MM-DD")}/>
       </div>
     );
   }
 }
+
+class DatePicker extends React.Component {
+  props: {
+    date: moment.Moment,
+    onChange: (m: moment.Moment) => void,
+  };
+
+  render() {
+    return (
+      <div className="datePicker">
+        <a className="dateChanger"
+          onClick={() => this.props.onChange(this.props.date.subtract(1, "day"))}>
+
+          Prev
+        </a>
+
+        <div className="dateDisplay">
+          {this.props.date.format("MMM Do, YYYY")}
+        </div>
+
+        <a className="dateChanger"
+          onClick={() => this.props.onChange(this.props.date.add(1, "day"))}>
+          Next
+        </a>
+      </div>
+    )
+  }
+}
+// class FirebaseUI extends React.Component {
+//   componentWillMount() {
+//     // FirebaseUI config.
+//     var uiConfig = {
+//       signInSuccessUrl: '<url-to-redirect-to-on-success>',
+//       signInOptions: [
+//         // Leave the lines as is for the providers you want to offer your users.
+//         firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+//         firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+//         firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+//         firebase.auth.GithubAuthProvider.PROVIDER_ID,
+//         firebase.auth.EmailAuthProvider.PROVIDER_ID,
+//         firebase.auth.PhoneAuthProvider.PROVIDER_ID
+//       ],
+//       // Terms of service url.
+//       tosUrl: '<your-tos-url>'
+//     };
+
+//     // Initialize the FirebaseUI Widget using Firebase.
+//     var ui = new firebaseui.auth.AuthUI(firebase.auth());
+//     // The start method will wait until the DOM is loaded.
+//     ui.start('#firebaseui-auth-container', uiConfig);
+//   }
+// }
 
 enum ActivityType {
   Blank,
@@ -43,9 +127,41 @@ class BlockModel {
   }
 }
 
-class Day extends React.Component {
-  state: {
-    hours: BlockModel[],
+let defaultHours = [
+  new BlockModel(ActivityType.Sleep), // 12am
+  new BlockModel(ActivityType.Sleep), // 1am
+  new BlockModel(ActivityType.Sleep), // 2am
+  new BlockModel(ActivityType.Sleep), // 3am
+  new BlockModel(ActivityType.Sleep), // 4am
+  new BlockModel(ActivityType.Sleep), // 5am
+  new BlockModel(ActivityType.Sleep), // 6am
+  new BlockModel(ActivityType.Sleep), // 7am
+  new BlockModel(ActivityType.Sleep), // 8am
+  new BlockModel(ActivityType.Meals), // 9am
+  new BlockModel(ActivityType.Blank), // 10am
+  new BlockModel(ActivityType.Blank), // 11am
+  new BlockModel(ActivityType.Blank), // 12am
+  new BlockModel(ActivityType.Meals), // 1pm
+  new BlockModel(ActivityType.Blank), // 2pm
+  new BlockModel(ActivityType.Blank), // 3pm
+  new BlockModel(ActivityType.Blank), // 4pm
+  new BlockModel(ActivityType.Blank), // 5pm
+  new BlockModel(ActivityType.Blank), // 6pm
+  new BlockModel(ActivityType.Meals), // 7pm
+  new BlockModel(ActivityType.Blank), // 8pm
+  new BlockModel(ActivityType.Blank), // 9pm
+  new BlockModel(ActivityType.Blank), // 10pm
+  new BlockModel(ActivityType.Sleep), // 11pm
+];
+
+interface DayProps {
+  date: string,
+}
+
+class Day extends React.Component<DayProps, {}> {
+  state = {
+    hours: [] as BlockModel[],
+    loading: true,
   }
 
   private activityChooser: ActivityChooser | null;
@@ -85,29 +201,51 @@ class Day extends React.Component {
     let clone = this.state.hours.slice(0); 
     clone[i].type = type;
     this.setState({hours: clone});
+    db.ref(`days/${this.props.date}`).set(clone).then(() => {
+      console.log("database value updated");
+    })
   }
 
   componentWillMount() {
-    let hours = [
-      new BlockModel(ActivityType.Blank),
-      new BlockModel(ActivityType.Sleep),
-      new BlockModel(ActivityType.School),
-      new BlockModel(ActivityType.DatingOrPartner),
-      new BlockModel(ActivityType.Work),
-      new BlockModel(ActivityType.Internet),
-      new BlockModel(ActivityType.Social),
-      new BlockModel(ActivityType.Gaming),
-      new BlockModel(ActivityType.Family),
-      new BlockModel(ActivityType.Travel),
-      new BlockModel(ActivityType.Errands),
-      new BlockModel(ActivityType.Exercise),
-    ];
+    this.loadDate();
+  }
 
-    while (hours.length < 24) {
-      hours.push(new BlockModel());
+  componentDidUpdate(prevProps: DayProps, nextState: {}) {
+    if (this.props.date === prevProps.date) {
+      return;
     }
 
-    this.setState({hours: hours});
+    this.loadDate();
+  }
+
+  private loadDate() {
+    this.setState({
+      hours: [],
+      loading: true,
+    });
+
+    db.ref(`days/${this.props.date}`).on('value', (snapshot) => {
+      if (!snapshot || !snapshot.exists()) {
+        console.warn("doesn't exist, returning");
+        return;
+      }
+      this.setState({
+        hours: snapshot.val() as ActivityType[],
+        loading: false,
+      });
+    });
+
+    db.ref("days").once('value', (snapshot) => {
+      if (!snapshot.hasChild(this.props.date)) {
+        db.ref(`days/${this.props.date}`).set(defaultHours).then(() => {
+          console.log("set default value");
+        });
+        this.setState({
+          hours: defaultHours,
+          loading: false,
+        })
+      }
+    });
   }
 
   render() {

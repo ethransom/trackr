@@ -7,6 +7,26 @@ body {
   max-width: 400px;
 }
 
+.datePicker {
+  max-width: 400px;
+}
+
+.datePicker a, .datePicker .dateDisplay {
+  float: left;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+}
+
+.datePicker a {
+  display: block;
+  width: 25%;  
+}
+
+.datePicker .dateDisplay {
+  width: 50%;
+}
+
 .block {
   height: 50px;
   width: 100%;
